@@ -1,11 +1,10 @@
-(Tabela as table, NomePrimeiraColuna as text) =>
+(Tabela as table) =>
 
 let
-    Fonte = Tabela,
-    CabecalhosRebaixados = Table.DemoteHeaders(Fonte),
-    ColunaIndice = Table.AddIndexColumn(CabecalhosRebaixados, "Indice", 0, 1, Int64.Type),
-    LinhaComPrimeiroCabecalho = Table.SelectRows(ColunaIndice, each [Column1] = NomePrimeiraColuna)[Indice]{0},
-    PularPrimeirasLinhas = Table.Skip(Fonte,LinhaComPrimeiroCabecalho-1),
-    CabecalhoPromovido = Table.PromoteHeaders(PularPrimeirasLinhas, [PromoteAllScalars=true])
+    #"Outras Colunas Removidas" = Table.SelectColumns(Tabela,{"DateKey", "SalesOrderNumber", "SalesAmount", "ProductKey"}),
+    #"Tipo Alterado" = Table.TransformColumnTypes(#"Outras Colunas Removidas",{{"DateKey", type date}}),
+    #"Personalização Adicionada" = Table.AddColumn(#"Tipo Alterado", "AnoMes", each Date.ToText([DateKey],"yyyyMM"), type text),
+    #"Personalização Adicionada1" = Table.AddColumn(#"Personalização Adicionada", "Semestre", each if Number.From(Text.End([AnoMes],2)) <= 6 then 1 else 2, Int64.Type),
+    #"Intervalo de Texto Extraído" = Table.TransformColumns(#"Personalização Adicionada1", {{"SalesOrderNumber", each Text.Middle(_, 9, 100), type text}})
 in
-    CabecalhoPromovido
+    #"Intervalo de Texto Extraído"
