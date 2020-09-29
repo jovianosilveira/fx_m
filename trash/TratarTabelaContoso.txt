@@ -8,3 +8,4 @@ let
     #"Intervalo de Texto Extraído" = Table.TransformColumns(#"Personalização Adicionada1", {{"SalesOrderNumber", each Text.Middle(_, 9, 100), type text}})
 in
     #"Intervalo de Texto Extraído"
+    
