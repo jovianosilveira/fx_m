@@ -1,0 +1,11 @@
+(Tabela as table, NomePrimeiraColuna as text) =>
+
+let
+    Fonte = Tabela,
+    CabecalhosRebaixados = Table.DemoteHeaders(Fonte),
+    ColunaIndice = Table.AddIndexColumn(CabecalhosRebaixados, "Indice", 0, 1, Int64.Type),
+    LinhaComPrimeiroCabecalho = Table.SelectRows(ColunaIndice, each [Column1] = NomePrimeiraColuna)[Indice]{0},
+    PularPrimeirasLinhas = Table.Skip(Fonte,LinhaComPrimeiroCabecalho-1),
+    CabecalhoPromovido = Table.PromoteHeaders(PularPrimeirasLinhas, [PromoteAllScalars=true])
+in
+    CabecalhoPromovido
