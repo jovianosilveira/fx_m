@@ -1,0 +1,6 @@
+(a as number, b as number) =>
+
+let
+    out = a+b
+in
+    out
