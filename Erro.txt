@@ -1,0 +1,8 @@
+(Tabelas as list) =>
+
+let
+    CombinarTabelas = Table.Combine(Tabelas),
+    Erros = Table.RowCount(Table.SelectRowsWithErrors(CombinarTabelas, Table.ColumnNames(CombinarTabelas))),
+    out = #table({"Status"}, {{try (if Erros > 0 then "ERRO" else "OK") otherwise "ERRO"}})
+in
+    out
