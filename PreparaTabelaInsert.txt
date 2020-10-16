@@ -13,7 +13,7 @@ let
             // aqui trabalhamos com as informações dos VALUES
             #"---Inicio Tratamento Tabela Informações" = "",
             Colunas = List.Buffer(Table.ColumnNames(Tabela)),
-            ColunasNumericas = List.Buffer(Table.ColumnsOfType(Tabela,{type number})),
+            ColunasNumericas = IdentificaTipoDadosCadaColunaTabela(Tabela, null, {type text})[Atributo],
             ColunasStr = List.RemoveMatchingItems(BINTabela, ColunasNumericas),
             ColunasNumParaConverter = Table.AddColumn(
                 Table.FromList(ColunasNumericas),
