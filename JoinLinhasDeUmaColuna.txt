@@ -1,0 +1,47 @@
+let
+    funcao = 
+
+        // ====================================== COMEÇA FUNÇÃO ======================================
+        (
+            ColunaDaTabela as list,
+            optional CaracterDelimitador as text
+        ) =>
+
+        let
+            Delimitador = if CaracterDelimitador = null then "#(cr)#(lf)" else Text.From(CaracterDelimitador) & "#(cr)#(lf)",
+            CriacaoTabela = #table(1, {{1}}),
+            ChamarLista = Table.AddColumn(CriacaoTabela, "COLUNA", each ColunaDaTabela),
+            #"Valores Extraídos" = Table.TransformColumns(ChamarLista, {"COLUNA", each Text.Combine(List.Transform(_, Text.From), Delimitador), type text})[COLUNA]{0}
+        in
+            #"Valores Extraídos"
+        // ====================================== COMEÇA FUNÇÃO ======================================
+
+            , metadados = [
+                Documentation.Name  = "JoinTextoLinhasDeUmaColuna",
+                Documentation.Description = "by Joviano Silveira (www.joviano.com) => Função que junta os textos de linha a linha de uma tabela",
+                Documentation.Examples = {
+
+                    // exemplo 01
+                    [
+                        Description = "descricao do exemplo 1",
+                        Code = "JoinTextoLinhasDeUmaColuna(Tabela[Coluna])",
+                        Result = "
+                        111 
+                        222 
+                        333 
+                        444
+                        
+                        obs: tudo em unico registro
+                        "
+                    ]
+                }
+            ]
+
+in
+
+    Value.ReplaceType(
+        funcao,
+        Value.ReplaceMetadata(
+            Value.Type(funcao),metadados
+        )
+    )

@@ -1,0 +1,84 @@
+let
+    funcao = 
+
+        // ====================================== COMEÇA FUNÇÃO ======================================
+        (
+            NomeTabelaInserirDados as text,
+            Tabela as table
+        )=>
+
+        let
+            Linha = Table.AddIndexColumn(Tabela, "Linha", 1, 1, Int64.Type),
+
+            // aqui trabalhamos com as informações dos VALUES
+            #"---Inicio Tratamento Tabela Informações" = "",
+            Colunas = List.Buffer(Table.ColumnNames(Tabela)),
+            ColunasNumericas = List.Buffer(Table.ColumnsOfType(Tabela,{type number})),
+            ColunasStr = List.RemoveMatchingItems(BINTabela, ColunasNumericas),
+            ColunasNumParaConverter = Table.AddColumn(
+                Table.FromList(ColunasNumericas),
+                "Tipo",
+                each {[Column1], type text}
+                )[Tipo],
+            BINTabela = Table.AddColumn(Linha, "BIN", each 1, Int64.Type),
+            AlterarTipoColunasNum = Table.TransformColumnTypes(BINTabela, ColunasNumParaConverter),
+            SubstituirVirgulaPonto = Table.ReplaceValue(AlterarTipoColunasNum,",",".",Replacer.ReplaceText,ColunasNumericas),
+            Valores_Miolo = Table.CombineColumns(SubstituirVirgulaPonto,Colunas,Combiner.CombineTextByDelimiter("', '", QuoteStyle.None),"miolo"),
+            _Values_ = 
+                let
+                    comando = Table.AddColumn(Valores_Miolo, "COMANDO", each "VALUES ('"&[miolo]&"');"),
+                    deletarcoluna = Table.RemoveColumns(comando, {"miolo"})
+                in
+                    deletarcoluna,
+
+            #"---Fim Tratamento Tabela Informações" = "",    
+
+            // aqui trabalhamos com as informações dos CABECALHOS
+            #"---Inicio Tratamento Tabela Cabecalhos" = "",
+            TabelaUmaLinha = Table.Buffer(Table.FirstN(Tabela,0)),
+            CabecalhosViramLinhas = Table.DemoteHeaders(TabelaUmaLinha),
+            ListaLinhasExplodir = Table.AddColumn(CabecalhosViramLinhas, "Linha", each List.Numbers(0,Table.RowCount(Tabela)+1 /*1 linha vai virar cabeçalho*/)),
+            LinhaExpandido = Table.ExpandListColumn(ListaLinhasExplodir, "Linha"),
+            PrimeiraLinhaComoCabecalho = Table.PromoteHeaders(LinhaExpandido, [PromoteAllScalars=true]),
+            ColunaLinhaRenomeada = Table.RenameColumns(PrimeiraLinhaComoCabecalho,{{"0", "Linha"}}),
+            BINCabecalho = Table.AddColumn(ColunaLinhaRenomeada, "BIN", each 0),
+            MioloCabecalho = Table.CombineColumns(BINCabecalho,Colunas,Combiner.CombineTextByDelimiter(", ", QuoteStyle.None),"miolo"),
+            _Cabecalho_ = 
+                let 
+                    comando = Table.AddColumn(MioloCabecalho, "COMANDO", each "INSERT INTO "&Text.From(NomeTabelaInserirDados)&" (" & [miolo] &") "),
+                    deletarcoluna = Table.RemoveColumns(comando, {"miolo"})
+                in
+                    deletarcoluna,
+
+
+            //  no final, basta unir, organizar, e pronto
+            #"===UNION===" = Table.Combine({_Cabecalho_,_Values_}),
+            OrdenarLinhas = Table.Sort(#"===UNION===",{{"Linha", Order.Ascending}})
+
+
+        in
+            OrdenarLinhas
+        // ====================================== COMEÇA FUNÇÃO ======================================
+
+            , metadados = [
+                Documentation.Name  = "PreparaTabelaInsert",
+                Documentation.Description = "by Joviano Silveira (www.joviano.com) => função que pega uma tabela e converte em um INSERT SQL",
+                Documentation.Examples = {
+
+                    // exemplo 01
+                    [
+                        Description = "descricao do exemplo 1",
+                        Code = "PreparaInsert(SQL_DimCliente, PowerQuery_TabelaTratada)",
+                        Result = "INSERT INTO SQL_DimCliente (ColA, ColB...ColZ) Values (x, p...t)"
+                    ]
+                }
+            ]
+
+in
+
+    Value.ReplaceType(
+        funcao,
+        Value.ReplaceMetadata(
+            Value.Type(funcao),metadados
+        )
+    )

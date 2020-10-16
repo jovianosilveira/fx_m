@@ -1,0 +1,41 @@
+let
+
+    funcao = 
+        (
+            a as number,
+            b as number
+        ) =>
+        let
+            c = a + b
+        in
+            c,
+
+            metadados = [
+                Documentation.Name  = "Função que soma dois registros",
+                Documentation.Description = "by Joviano Silveira (www.joviano.com)",
+                Documentation.Examples = {
+
+                    // exemplo 01
+                    [
+                        Description = "descricao do exemplo 1",
+                        Code = "funcao(2,3)",
+                        Result = "5"
+                    ],
+
+                    // exemplo 02
+                    [
+                        Description = "descricao do exemplo 2",
+                        Code = "funcao(2,3)",
+                        Result = "5"
+                    ]                    
+                }
+            ]
+
+in
+
+    Value.ReplaceType(
+        funcao,
+        Value.ReplaceMetadata(
+            Value.Type(funcao),metadados
+        )
+    )
