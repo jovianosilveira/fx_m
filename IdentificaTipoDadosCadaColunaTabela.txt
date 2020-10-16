@@ -18,7 +18,7 @@ let
 				if SomenteTipos = null and ExcetoTipos = null then true
 				else 
 							List.Contains((if SomenteTipos = null then {} else SomenteTipos), [Valor]) 
-					and not List.Contains((if ExcetoTipos = null then {} else ExcetoTipos), [Valor])
+					or not  List.Contains((if ExcetoTipos = null then {} else ExcetoTipos), [Valor])
 				
 				)
 		in
