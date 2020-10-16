@@ -4,10 +4,25 @@ let
         // ====================================== COMEÇA FUNÇÃO ======================================
 
 
-        let
-            Fonte = IdentificaTipoDados
-        in
-            Fonte
+		(
+			Tabela as table,
+			optional SomenteTipos as list,
+			optional ExcetoTipos as list
+		) =>
+
+		let
+			PrimeiraLinhaTabela = Table.FirstN(Tabela,1),
+			Despivotar = Table.UnpivotOtherColumns(PrimeiraLinhaTabela, {}, "Atributo", "Valor"),
+			ExtraindoTipoDado = Table.TransformColumns(Despivotar, {{"Valor", each Value.Type(_), type text}}),
+			Filtrar = Table.SelectRows(ExtraindoTipoDado, each 
+				if SomenteTipos = null and ExcetoTipos = null then true
+				else 
+							List.Contains((if SomenteTipos = null then {} else SomenteTipos), [Valor]) 
+					and not List.Contains((if ExcetoTipos = null then {} else ExcetoTipos), [Valor])
+				
+				)
+		in
+			Filtrar
 
         // ====================================== COMEÇA FUNÇÃO ======================================
 
@@ -32,7 +47,7 @@ let
                     // exemplo 02
                     [
                         Description = "Tipos de dados de uma tabela, e filtrar somente tipos texto",
-                        Code = "IdentificaTipoDadosCadaColunaTabela(Tabela, type text, null)",
+                        Code = "IdentificaTipoDadosCadaColunaTabela(Tabela, {type text}, null)",
                         Result = "
                         {
                             {ColunaB, type text}                                                     
@@ -43,7 +58,7 @@ let
                     // exemplo 02
                     [
                         Description = "Tipos de dados de uma tabela, e filtrar exceto tipos texto",
-                        Code = "IdentificaTipoDadosCadaColunaTabela(Tabela, null, type text)",
+                        Code = "IdentificaTipoDadosCadaColunaTabela(Tabela, null, {type text})",
                         Result = "
                         {
                             {ColunaA, type number},
