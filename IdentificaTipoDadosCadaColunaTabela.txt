@@ -1,0 +1,80 @@
+let
+    funcao = 
+
+        // ====================================== COMEÇA FUNÇÃO ======================================
+
+
+		(
+			Tabela as table,
+			optional SomenteTipos as list,
+			optional ExcetoTipos as list
+		) =>
+
+		let
+			PrimeiraLinhaTabela = Table.FirstN(Tabela,1),
+			Despivotar = Table.UnpivotOtherColumns(PrimeiraLinhaTabela, {}, "Atributo", "Valor"),
+			ExtraindoTipoDado = Table.TransformColumns(Despivotar, {{"Valor", each Value.Type(_), type text}}),
+			Filtrar = Table.SelectRows(ExtraindoTipoDado, each 
+				if SomenteTipos = null and ExcetoTipos = null then true
+				else 
+							List.Contains((if SomenteTipos = null then {} else SomenteTipos), [Valor]) 
+					or not  List.Contains((if ExcetoTipos = null then {} else ExcetoTipos), [Valor])
+				
+				)
+		in
+			Filtrar
+
+        // ====================================== COMEÇA FUNÇÃO ======================================
+
+            , metadados = [
+                Documentation.Name  = "IdentificaTipoDadosCadaColunaTabela",
+                Documentation.Description = "by Joviano Silveira (www.joviano.com) => Função identifica e (se quiser) filtra os tipos de dados de uma tabela",
+                Documentation.Examples = {
+
+                    // exemplo 01
+                    [
+                        Description = "Tipos de dados de uma tabela",
+                        Code = "IdentificaTipoDadosCadaColunaTabela(Tabela)",
+                        Result = "
+                        {
+                            {ColunaA, type number},
+                            {ColunaB, type text},
+                            {ColunaC, type Int64.Type}                                                       
+                        }
+                        "
+                    ],
+
+                    // exemplo 02
+                    [
+                        Description = "Tipos de dados de uma tabela, e filtrar somente tipos texto",
+                        Code = "IdentificaTipoDadosCadaColunaTabela(Tabela, {type text}, null)",
+                        Result = "
+                        {
+                            {ColunaB, type text}                                                     
+                        }
+                        "
+                    ],
+
+                    // exemplo 02
+                    [
+                        Description = "Tipos de dados de uma tabela, e filtrar exceto tipos texto",
+                        Code = "IdentificaTipoDadosCadaColunaTabela(Tabela, null, {type text})",
+                        Result = "
+                        {
+                            {ColunaA, type number},
+                            {ColunaC, type Int64.Type}                                                       
+                        }
+                        "
+                    ]                    
+
+                }
+            ]
+
+in
+
+    Value.ReplaceType(
+        funcao,
+        Value.ReplaceMetadata(
+            Value.Type(funcao),metadados
+        )
+    )
