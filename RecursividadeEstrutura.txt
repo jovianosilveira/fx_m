@@ -57,11 +57,15 @@ let
         in 
             Saida(TabelaExplodir)
 
-    // ------------------------------------------------------------------- FIM DA FUNCAO -------------------------------------------------------------------
+        // ------------------------------------------------------------------- FIM DA FUNCAO -------------------------------------------------------------------
 
             , metadados = [
                 Documentation.Name  = "RecursividadeEstrutura",
-                Documentation.Description = "by Joviano Silveira (www.joviano.com): Essa função explode a estrutura do produto, encontrando o ultimo nivel do produto dela, ou seja, a lista de compras de materiais para fazer cada produto",
+                Documentation.Description = "
+                    by Joviano Silveira (www.joviano.com)
+                    Essa função explode a estrutura do produto, encontrando o ultimo nivel do produto dela, ou seja, a lista de compras de materiais para fazer cada produto. ===ATENÇÃO=== a tabela tem que conter esses campos, com exatamente esses nomes: PRODUTO, COMPONENTE, QTD
+                ",
+                
                 Documentation.Examples = {
 
                     // exemplo 01
@@ -80,10 +84,9 @@ let
                                     [PRODUTO = 200001, COMPONENTE = 500003, QTD = 1],
                                     [PRODUTO = 200001, COMPONENTE = 500004, QTD = 5]
                                 }),
-
                                 {100001, 100002}
-
                             )                        
+                          
                         ",
                         Result = "
                             ProdutoFim | NivelProduto | NivelComponente | NivelQtd
