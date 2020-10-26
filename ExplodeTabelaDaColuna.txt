@@ -4,26 +4,53 @@ let
     // ------------------------------------------------------------------- INICIO DA FUNCAO -------------------------------------------------------------------
 
         (
-            Tabela as table, 
-            NomeColuna as text
+            TabelaExplodir as table,
+            NomeColunaExplodir as text
         ) =>
-
         try
 
-            let 
-                etapa_anterior = Table.SelectColumns(Tabela,{NomeColuna}),
-                cabecalhos_rebaixados = Table.DemoteHeaders(etapa_anterior)[Column1]{1},
-                tabela_expandida = 
+            let
+                NomeColunaExplodir = "det.imposto.ICMS",
+                Fonte = TabelaExplodir,
+                SelecionarSomenteColunaExplodir = Table.SelectColumns(Fonte,{NomeColunaExplodir}),
+
+                /*
+                Como cada futura utilização da formula vai mudar o nome da coluna
+                Usei essa técnica para não quebrar a formula
+                Com isso sembre que invocada, será "Column1"
+                */
+                RebaixarCabecalhoPadronizarNome = Table.DemoteHeaders(SelecionarSomenteColunaExplodir),
+
+                RemoverExTitulo = Table.Skip(RebaixarCabecalhoPadronizarNome,1),
+
+                // Como cada linha tem uma subtabela, adicionamos uma coluna para pegar os nomes das colunas das "subtabelas"
+                ListaColunasNaTabela = Table.AddColumn(RemoverExTitulo, "NomesColunas", each Table.ColumnNames([Column1])),
+
+                // Unimos tudo em uma lista, com registros únicos, e aplicamos o Buffer para agiliar a consulta
+                NomesUnicosColunas = 
+                    List.Buffer(
+                        List.Distinct(
+                            Table.ExpandListColumn(
+                                ListaColunasNaTabela, 
+                                "NomesColunas"
+                            )[NomesColunas]
+                        )
+                    ),
+
+                // adicionado o Nome da coluna explodir como prefixo
+                NomesUnicosColunas_ComPrefixo = List.Transform(NomesUnicosColunas, each NomeColunaExplodir &"."& _ ),
+
+                FonteExplodida = 
                     Table.ExpandTableColumn(
-                        Tabela, 
-                        NomeColuna, 
-                        Table.ColumnNames(cabecalhos_rebaixados), 
-                        Table.ColumnNames(Table.PrefixColumns(cabecalhos_rebaixados,NomeColuna))
+                        Fonte, 
+                        NomeColunaExplodir, 
+                        NomesUnicosColunas, 
+                        NomesUnicosColunas_ComPrefixo
                     )
-            in 
-                tabela_expandida
-                
-        otherwise Tabela
+            in
+                FonteExplodida
+
+        otherwise TabelaExplodir
 
         // ------------------------------------------------------------------- FIM DA FUNCAO -------------------------------------------------------------------
 
