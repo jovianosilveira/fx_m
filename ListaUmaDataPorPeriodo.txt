@@ -74,7 +74,9 @@ let
                           ListaUmaDataPorMes(
                               01/01/2020,   // data inicio
                               31/03/2020,   // data fim
-                              1             // 1 - inicio | 2 = fim
+                              1             // *
+
+                              * parametros: IM, IT, IA, FM, FT, FA | I = Inicio, F = Fim | M = mês, T = Trimestre, A = Ano
                         ",
                         Result = "
                             {
