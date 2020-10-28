@@ -18,16 +18,40 @@ let
             DatasInicioMes = 
                 List.Select(
                     Datas,
-                    each _ = Date.EndOfMonth(_) 
+                    each _ = Date.StartOfMonth(_) 
                 ),
             DatasFimMes = 
                 List.Select(
                     Datas,
                     each _ = Date.EndOfMonth(_) 
                 ),
+            DatasInicioTrimestre = 
+                List.Select(
+                    Datas,
+                    each _ = Date.StartOfQuarter(_) 
+                ),
+            DatasFimTrimestre = 
+                List.Select(
+                    Datas,
+                    each _ = Date.EndOfQuarter(_) 
+                ),       
+            DatasInicioAno = 
+                List.Select(
+                    Datas,
+                    each _ = Date.StartOfYear(_) 
+                ),
+            DatasFimAno = 
+                List.Select(
+                    Datas,
+                    each _ = Date.EndOfYear(_) 
+                ),                            
             out = 
-                if Tipo = 1 or Tipo = null then DatasInicioMes
-                else if Tipo = 2 then DatasFimMes
+                if      Tipo = "IM" then DatasInicioMes
+                else if Tipo = "IT" then DatasInicioTrimestre
+                else if Tipo = "IA" then DatasInicioAno 
+                else if Tipo = "FM" then DatasFimMes
+                else if Tipo = "FT" then DatasFimTrimestre
+                else if Tipo = "FA" then DatasFimAno                                          
                 else null
 
         in
