@@ -1,0 +1,64 @@
+let
+
+    funcao = 
+    // ------------------------------------------------------------------- INICIO DA FUNCAO -------------------------------------------------------------------
+
+
+        (
+            Tabela as table,
+            Separador as text
+        ) =>
+
+        let
+            Delimitador = if Separador = null then "', '" else Separador,
+            Fonte = Tabela,
+            CabecalhoRebaixado = Table.DemoteHeaders(Fonte),
+            NovaPrimeiraLinhaRemovida = Table.Skip(CabecalhoRebaixado,1),
+            Trimar = Table.TransformColumns(NovaPrimeiraLinhaRemovida,{{"Valores", Text.Trim, type text}}),
+            TabelaComUmRegistro = #table(1, {{1}}),
+            #"Personalização Adicionada" = Table.AddColumn(TabelaComUmRegistro, "Personalizar", each NovaPrimeiraLinhaRemovida[Column1]),
+            #"Valores Extraídos" = Table.TransformColumns(#"Personalização Adicionada", {"Personalizar", each Text.Combine(List.Transform(_, Text.From), Delimitador), type text}),
+            Personalizar = #"Valores Extraídos"{0}[Personalizar]
+        in
+            Personalizar
+
+        // ------------------------------------------------------------------- FIM DA FUNCAO -------------------------------------------------------------------
+
+            , metadados = [
+                Documentation.Name  = "ConcatenaLinhasEmUnicoTexto",
+                Documentation.Description = "
+                    by Joviano Silveira (www.joviano.com)
+                    Pegar primeira coluna de uma tabela, e transformar em uma string concatenando todos os textos. Isso com ou sem delimitador",
+                
+                Documentation.Examples = {
+
+                    // exemplo 01
+                    [
+                        Description = "descricao do exemplo 1",
+                        Code = "
+                            ConcatenaLinhasEmUnicoTexto(
+
+                                | Cod | 
+                                |   A |                    
+                                |  BB |                       
+                                | CCC |  
+
+                                , ','
+                            )                          
+                        ",
+                        Result = "
+                            A, BB, CCC             
+                        "
+                    ]
+
+                }
+            ]
+
+in
+
+    Value.ReplaceType(
+        funcao,
+        Value.ReplaceMetadata(
+            Value.Type(funcao),metadados
+        )
+    )
