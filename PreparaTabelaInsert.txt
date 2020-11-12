@@ -14,9 +14,9 @@ let
             #"---Inicio Tratamento Tabela Informações" = "",
             Colunas = List.Buffer(Table.ColumnNames(Tabela)),
             ColunasNumericas = IdentificaTipoDadosCadaColunaTabela(Tabela, {type number}, null)[Atributo],
-            ColunasStr = List.RemoveMatchingItems(BINTabela, ColunasNumericas),
+            ColunasStr = List.RemoveMatchingItems(Colunas, ColunasNumericas),
             ColunasNumParaConverter = Table.AddColumn(
-                Table.FromList(ColunasNumericas),
+                Table.FromList(Colunas),
                 "Tipo",
                 each {[Column1], type text}
                 )[Tipo],
