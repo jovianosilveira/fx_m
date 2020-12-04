@@ -1,0 +1,83 @@
+/*
+    COPIE E COLE ESSA FORMULA NO SEU PROJETO.
+    LOCALMENTE ELA ESTÁ FUNCIONANDO PERFEITA.
+    SOMENTE QUANDO 'PUXADA' DO GIT, ESTÁ FALHANDO
+*/
+
+let
+
+    funcao = 
+    // ------------------------------------------------------------------- INICIO DA FUNCAO -------------------------------------------------------------------
+
+
+        (
+            TextoSubstituir as text,
+            TabelaSubstituicoes as table
+        )=>
+
+        let
+
+            CriarListaDuplinhas = Table.AddColumn(TabelaSubstituicoes, "ProcurarSubstituir", each {[DE],[PARA]}),
+            ListaDuplas = CriarListaDuplinhas[ProcurarSubstituir],
+
+            frase = TextoSubstituir,
+            frase_quebrada = Text.Split(frase, " "),
+
+            frase_nova = 
+                Text.Combine(
+                    List.ReplaceMatchingItems(
+                        frase_quebrada,
+                        ListaDuplas
+                    )
+                    ," "
+                )
+
+        in
+            frase_nova
+
+    // ------------------------------------------------------------------- FIM DA FUNCAO -------------------------------------------------------------------
+
+        , metadados = [
+            Documentation.Name  = "SubstituirPalavras_Simples",
+            Documentation.Description = "
+                by Joviano Silveira (www.joviano.com)
+                Use quando você tem uma frase e quer substituir palavras inteiras.
+                Essa forma é a mais fácil, só que o que divide inicio e fim da palavra é o 'espaço'.
+                Você pode querer delimitar o inicio e fim de palavra com outros caracteres (como o '.' por exemplo).
+                Nesse caso pesquise se já lancei o 'SubstituirPalavras_Complexo'.
+                ",
+            
+            Documentation.Examples = {
+
+                // exemplo 01
+                [
+                    Description = "descricao do exemplo 1",
+                    Code = "            
+                        TabelaSubstituicoes
+                        | DE    | PARA  |
+                        | XX YY | AA BB |
+
+                        Chamar função
+                        = SubstituirPalavras_Simples ('XX YY', TabelaSubstituicoes)
+
+                    ",
+                    Result = "
+                        {
+                            'AA BB'
+                        }        
+
+                    obs.: aonde mostramos áspas simples, leia-se duplas     
+                    "
+                ]
+
+            }
+        ]
+
+in
+
+    Value.ReplaceType(
+        funcao,
+        Value.ReplaceMetadata(
+            Value.Type(funcao),metadados
+        )
+    )
