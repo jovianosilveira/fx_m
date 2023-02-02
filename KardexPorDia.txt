@@ -1,0 +1,244 @@
+let
+
+    funcao = 
+    // ------------------------------------------------------------------- INICIO DA FUNCAO -------------------------------------------------------------------
+
+		(
+			DataInicial as date,
+			DataFinal as date,
+			optional ListaProdutos as text,
+			optional ListaArmazens as text
+		)=>
+
+		let
+
+			vDataIni = Date.ToText(   Date.AddDays(Date.StartOfMonth(DataInicial),-1)   ,"yyyyMMdd"),
+			vDataFim = Date.ToText(   DataFinal   ,"yyyyMMdd"),  
+			vListaProd = ListaProdutos,
+			vListaArm = ListaArmazens,
+			
+			comando = "
+
+				SELECT 
+					TABELA,
+					RECNO,
+					ORIGEM,
+					FIL_ARM = FIL_ARM+' - '+RTRIM(LTRIM(X5_DESCRI)),
+					ANO_MES = LEFT(DT_MOVTO,6),
+					DT_MOVTO,
+					PRODUTO = CODIGO+' - '+RTRIM(LTRIM(B1_DESC)),
+					COD_MOV,
+					FORN_CLI_COD,
+					DOC_NUM,
+					QTD,
+					CUS
+
+				FROM (
+
+					-- =================== saldo anterior ===================
+
+						SELECT 
+							TABELA			= 'SB9',
+							RECNO			= B9.R_E_C_N_O_,
+							ORIGEM			= '00 - Posicao Anterior',
+							FIL_ARM			= rtrim(ltrim(B9_FILIAL))+'-'+ltrim(rtrim(B9_LOCAL)), 
+							CODIGO			= rtrim(ltrim(B9_COD)), 
+							DT_MOVTO		= B9_DATA, 
+							QTD				= B9_QINI, 
+							CUS				= (B9_CM1*B9_QINI),
+							COD_MOV			= NULL,
+							FORN_CLI_COD	= NULL,
+							DOC_NUM			= NULL
+
+						FROM SB9010 B9 (NOLOCK)
+					
+						WHERE 
+								B9_QINI <> 0
+							AND B9_DATA = '"&vDataIni&"'
+							"&
+							(if vListaProd = null then "" else "AND B9_COD IN (" & vListaProd &")" )
+							&
+							(if vListaArm = null then "" else "AND B9_LOCAL IN (" & vListaArm &")" )
+							&"
+							AND B9_FILIAL >= ''
+							AND B9.D_E_L_E_T_ = ''
+
+					-- =================== movimentos de entrada ===================
+					union all
+
+
+						SELECT 
+							TABELA			= 'SD1',
+							RECNO			= D1.R_E_C_N_O_,
+							ORIGEM			= '01 - Notas Entrada',
+							FIL_ARM			= RTRIM(LTRIM(D1_FILIAL))+'-'+RTRIM(LTRIM(D1_LOCAL)), 
+							CODIGO			= RTRIM(LTRIM(D1_COD)), 
+							DT_MOV			= D1_DTDIGIT,
+							QTD				= D1_QUANT, 
+							CUS				= D1_CUSTO, 
+							COD_MOV			= D1_TES+' - '+RTRIM(LTRIM(F4A.F4_DESCRIC)),
+							FORN_CLI_COD	= RTRIM(LTRIM(D1_FORNECE))+'/'+RTRIM(LTRIM(D1_LOJA))+' - '+NOME,
+							DOC_NUM			= RTRIM(LTRIM(D1_DOC))+'-'+RTRIM(LTRIM(D1_SERIE)) 
+					
+						FROM SD1010 D1 (NOLOCK)
+
+						LEFT JOIN v_pb_CadastroCliFor_Consolidado ON
+								D1_FORNECE = COD
+							AND D1_LOJA = LOJA
+
+						INNER JOIN SF4010 F4A (NOLOCK) ON
+								D1_TES = F4A.F4_CODIGO
+							AND F4A.F4_ESTOQUE = 'S'
+							AND F4A.F4_FILIAL = ''
+							AND F4A.D_E_L_E_T_ = ''
+					
+						WHERE 
+								D1_DTDIGIT > '"&vDataIni&"'
+							AND D1_DTDIGIT <= '"&vDataFim&"'
+							AND D1_TES != ''
+							"&
+							(if vListaProd = null then "" else "AND D1_COD IN (" & vListaProd &")" ) 
+							&
+							(if vListaArm = null then "" else "AND D1_LOCAL IN (" & vListaArm &")" )
+							&"
+							AND D1_FILIAL >= ''
+							AND D1.D_E_L_E_T_ = ''
+
+					-- =================== movimentos de saida ===================
+					union all
+
+
+						SELECT 
+							TABELA			= 'SD2',
+							RECNO			= D2.R_E_C_N_O_,
+							ORIGEM			= '02 - Notas Saida',
+							FIL_ARM			= RTRIM(LTRIM(D2_FILIAL))+'-'+RTRIM(LTRIM(D2_LOCAL)), 
+							CODIGO			= RTRIM(LTRIM(D2_COD)), 
+							DT_MOV			= D2_EMISSAO,
+							QTD				= D2_QUANT*-1, 
+							CUS				= D2_CUSTO1*-1, 
+							COD_MOV			= D2_TES+' - '+RTRIM(LTRIM(F4B.F4_DESCRIC)),
+							FORN_CLI_COD	= RTRIM(LTRIM(D2_CLIENTE))+'/'+RTRIM(LTRIM(D2_LOJA))+' - '+NOME,
+							DOC_NUM			= RTRIM(LTRIM(D2_DOC))+'-'+RTRIM(LTRIM(D2_SERIE)) 
+					
+						FROM SD2010 D2 (NOLOCK)
+
+						LEFT JOIN v_pb_CadastroCliFor_Consolidado ON
+								D2_CLIENTE = COD
+							AND D2_LOJA = LOJA
+
+						INNER JOIN SF4010 F4B (NOLOCK) ON
+								D2_TES = F4B.F4_CODIGO
+							AND F4B.F4_ESTOQUE = 'S'
+							AND F4B.F4_FILIAL = ''
+							AND F4B.D_E_L_E_T_ = ''
+					
+						WHERE 
+								D2_EMISSAO > '"&vDataIni&"'
+							AND D2_EMISSAO <= '"&vDataFim&"'
+							"&
+							(if vListaProd = null then "" else "AND D2_COD IN (" & vListaProd &")" )
+							&
+							(if vListaArm = null then "" else "AND D2_LOCAL IN (" & vListaArm &")" )
+							&"
+							AND D2_FILIAL >= ''
+							AND D2.D_E_L_E_T_ = ''
+
+					-- =================== movimentos internos ===================
+					union all
+
+
+						SELECT 
+							TABELA			= 'SD3',
+							RECNO			= D3.R_E_C_N_O_,
+							ORIGEM			= '03 - Movim Int',
+							FIL_ARM			= RTRIM(LTRIM(D3_FILIAL))+'-'+RTRIM(LTRIM(D3_LOCAL)), 
+							CODIGO			= RTRIM(LTRIM(D3_COD)), 
+							DT_MOV			= D3_EMISSAO,
+							QTD				= CASE WHEN D3_TM < '500' THEN D3_QUANT ELSE D3_QUANT*-1 end, 
+							CUS				= CASE WHEN D3_TM < '500' THEN D3_CUSTO1 ELSE D3_CUSTO1*-1 end, 
+							COD_MOV			= 
+								CASE 
+									WHEN D3_TM = '499' THEN '499 - AUTOM'
+									WHEN D3_TM = '999' THEN '999 - AUTOM'
+									ELSE D3_TM+' - '+RTRIM(LTRIM(F5_TEXTO))
+									END,
+							FORN_CLI_COD	= NULL,
+							DOC_NUM			= CASE WHEN D3_OP = '' THEN 'DOC '+RTRIM(LTRIM(D3_DOC))+' - CENCUS '+RTRIM(LTRIM(D3_CC)) ELSE 'OP '+RTRIM(LTRIM(D3_OP)) END
+					
+						FROM SD3010 D3 (NOLOCK)
+
+						LEFT JOIN SF5010 F5 (NOLOCK) ON
+								D3_TM = F5_CODIGO
+							AND F5_FILIAL = ''
+							AND F5.D_E_L_E_T_ = ''
+					
+						WHERE 
+								D3_EMISSAO > '"&vDataIni&"'
+							AND D3_EMISSAO <= '"&vDataFim&"'
+							"&
+							(if vListaProd = null then "" else "AND D3_COD IN (" & vListaProd &")" ) 	
+							&
+							(if vListaArm = null then "" else "AND D3_LOCAL IN (" & vListaArm &")" )
+							&"            	
+							AND D3_ESTORNO != 'S'
+							AND D3_FILIAL >= ''
+							AND D3.D_E_L_E_T_ = ''
+
+				) A
+
+				LEFT JOIN SB1010 B1 (NOLOCK) ON
+						CODIGO = B1_COD
+					AND B1_FILIAL = ''
+					AND B1.D_E_L_E_T_ = ''
+
+				LEFT JOIN SX5010 FILIAL (NOLOCK) ON
+						FIL_ARM = X5_FILIAL+'-'+X5_CHAVE
+					AND X5_TABELA = 'Z9'
+					AND FILIAL.D_E_L_E_T_ = ''
+							
+			",
+			Fonte = Sql.Database("SQL01", "TOTVS11", [Query=comando]),
+			TipoAlterado = Table.TransformColumnTypes(Fonte,{{"DT_MOVTO", type date}})
+		in
+			TipoAlterado
+
+	// ------------------------------------------------------------------- FIM DA FUNCAO -------------------------------------------------------------------
+
+		, metadados = [
+			Documentation.Name  = "fxKardexProtheus",
+			Documentation.Description = "
+				by Joviano Silveira (www.joviano.com)
+				Essa função retorna as movimentações no KARDEX do inicio do mês da DataInicial até o dia da DataFinal
+			",
+			
+			Documentation.Examples = {
+
+				// exemplo 01
+				[
+					Description = "descricao do exemplo 1",
+					Code = "
+					
+						fxKardexProtheus(
+							05/06/2022,
+							20/06/2022,
+							"" '11010001', '21123344' "", 
+							"" '01','98' ""
+						)	
+					",
+					Result = "
+						Tabela com as movimentações.                   
+					"
+				]
+
+			}
+		]
+
+in
+
+	Value.ReplaceType(
+		funcao,
+		Value.ReplaceMetadata(
+			Value.Type(funcao),metadados
+		)
+	)

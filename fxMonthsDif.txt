@@ -1,0 +1,82 @@
+let
+
+    funcao = 
+    // ------------------------------------------------------------------- INICIO DA FUNCAO -------------------------------------------------------------------
+
+    (
+        Date1 as date,
+        Date2 as date
+    )=>
+
+    let
+        dias = Number.From(Date1) - Number.From(Date2),
+        dias_abs = Number.Abs(dias),
+        mult = if Date1 >= Date2 then 1 else -1, 
+
+        menor = List.Min({Date1, Date2}),
+        maior = List.Max({Date1, Date2}),
+
+        lista =
+            List.Select(
+                List.Dates(
+                    menor, 
+                    dias_abs, 
+                    #duration(1,0,0,0)
+                )
+                , each _ = Date.EndOfMonth(_)
+            ),
+
+        cnt = List.Count(lista) * mult
+
+    in
+        cnt
+
+    // ------------------------------------------------------------------- FIM DA FUNCAO -------------------------------------------------------------------
+
+        , metadados = [
+            Documentation.Name  = "fxMonthsDif",
+            Documentation.Description = "
+                by Joviano Silveira (www.joviano.com)
+                Essa função calcula a diferença de meses entre duas datas, sem considerar a fração do mês.",
+            
+            Documentation.Examples = {
+
+                // exemplo 01
+                [
+                    Description = "Exemplo 1: Quando a Data1 é menor que a Data2",
+                    Code = "
+                        fxMonthsDif(
+                            #date(2022,11,20),
+                            #date(2022,12,31)
+                        )                          
+                    ",
+                    Result = "
+                        -2
+                    "
+                ],
+
+                // exemplo 02
+                [
+                    Description = "Exemplo 2: Quando a Data1 é MAIOR que a Data2",
+                    Code = "
+                        fxMonthsDif(
+                            #date(2022,12,31),
+                            #date(2022,11,20)
+                        )                          
+                    ",
+                    Result = "
+                        2
+                    "
+                ]                
+
+            }
+        ]
+
+in
+
+    Value.ReplaceType(
+        funcao,
+        Value.ReplaceMetadata(
+            Value.Type(funcao),metadados
+        )
+    )
