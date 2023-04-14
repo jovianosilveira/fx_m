@@ -1,0 +1,67 @@
+let
+
+    funcao = 
+    // ------------------------------------------------------------------- INICIO DA FUNCAO -------------------------------------------------------------------
+        (
+            NomeCampo as text,
+            OperacaoLinhaLinha as text,
+            Tabela as table
+        )=>
+        let
+            /*
+            // -->> variaveis no momento do desenvolvimento 
+            NomeCampo = "VALOR",
+            OperacaoLinhaLinha = "each _ * 100",
+            Tabela = fxRateio,
+            */
+
+            AlteraPrimeiraLinha = 
+                Table.FromRecords({
+                    Record.TransformFields(
+                        Tabela{0},
+                        {NomeCampo, Expression.Evaluate(OperacaoLinhaLinha)}
+                    )
+                }),
+
+            MantemUltimasLinhas = Table.Skip(Tabela,1),
+
+            UneLinhas = Table.Combine({AlteraPrimeiraLinha, MantemUltimasLinhas})
+
+        in
+            if Table.IsEmpty(Tabela) then Tabela else UneLinhas
+        // ------------------------------------------------------------------- FIM DA FUNCAO -------------------------------------------------------------------
+
+            , metadados = [
+                Documentation.Name  = "fxAlteraPrimeiraLinhaTabela",
+                Documentation.Description = "
+                    by Joviano Silveira (www.joviano.com)
+                    Essa função altera o valor de um registro SOMENTE na primeira linha da tabela.
+                    Ideal para ajustar arredondamentos.
+                    ",
+                
+                Documentation.Examples = {
+
+                    // exemplo
+                    [
+                        Description = "Multiplicando o valor da primeira linha da coluna 'VALOR' por 100",
+                        Code = "fxAlteraPrimeiraLinhaTabela(
+                            ""VALOR"",
+                            ""each _ * 100"",
+                            MinhaTabela
+                        )",
+                        Result = "
+                            Vai transformar o texto em função e aplicar à primeira linha da tabela
+                        "
+                    ]
+
+                }
+            ]
+
+in
+
+    Value.ReplaceType(
+        funcao,
+        Value.ReplaceMetadata(
+            Value.Type(funcao),metadados
+        )
+    )
