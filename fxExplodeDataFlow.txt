@@ -11,15 +11,17 @@ let
         )=>
 
         let 
+            pbix_flows = PowerPlatform.Dataflows(),
             pbix_entidade = 
                 Table.SelectRows(
                     Table.SelectRows(
                             Table.SelectRows(
-                                PowerBI.Dataflows(null), 
-                                each [workspaceName] = workspace_nome)[Data]{0}, 
+                                pbix_flows, 
+                                each [workspaceName] = workspace_nome
+                            )[Data]{0}, 
                             each [dataflowName] = fluxo_nome
-                        )[Data]{0}, 
-                        each [entity] = tabela_nome
+                    )[Data]{0}, 
+                    each [entity] = tabela_nome
                 )[Data]{0}
         in   
             pbix_entidade
